@@ -1,37 +1,48 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateQuizDto } from '../../dtos/quiz.dto';
 import { SubmitAnswerDto } from '../../dtos/quiz.dto';
 import { v4 as uuidv4 } from 'uuid';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 
-// Define the Question interface
 interface Question {
   id: string;
   question: string;
   options: string[];
-  correctAnswer?: string; // correctAnswer is optional now
+  correctAnswer?: string;
 }
 
-// Define the Quiz interface
 interface Quiz {
   id: string;
   title: string;
   questions: Question[];
 }
 
-// Define a type for user answers
 interface UserAnswers {
   [quizId: string]: {
-    [questionId: string]: string;  // The answer could be a string, modify it if needed
+    [questionId: string]: string; 
   };
 }
 
+@ApiTags('Quiz')
 @Injectable()
 export class QuizService {
-  private quizzes: Quiz[] = []; // Store quizzes
-  private userAnswers: UserAnswers = {}; // Store user answers
+  private quizzes: Quiz[] = []; 
+  private userAnswers: UserAnswers = {}; 
 
-  // Method to create a new quiz
+  @ApiOperation({ summary: 'Create a new quiz' })
+  @ApiResponse({
+    status: 201,
+    description: 'The quiz has been successfully created.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request if title or questions are missing.',
+  })
   createQuiz(createQuizDto: CreateQuizDto): Quiz {
+    if (!createQuizDto.title || !createQuizDto.questions || createQuizDto.questions.length === 0) {
+      throw new BadRequestException('Title and questions are required');
+    }
+
     const quizId = uuidv4();
     const quiz: Quiz = {
       id: quizId,
@@ -41,11 +52,19 @@ export class QuizService {
         ...question,
       })),
     };
-    this.quizzes.push(quiz); // Add quiz to quizzes array
+    this.quizzes.push(quiz); 
     return quiz;
   }
 
-  // Method to get a quiz by ID
+  @ApiOperation({ summary: 'Get a quiz by its ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'The quiz data has been successfully retrieved.'
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Quiz not found.',
+  })
   getQuizById(quizId: string): Quiz {
     const quiz = this.quizzes.find((q) => q.id === quizId);
 
@@ -53,7 +72,6 @@ export class QuizService {
       throw new NotFoundException('Quiz not found');
     }
 
-    // Map through the questions and exclude the correct answers
     const quizWithoutCorrectAnswers = {
       ...quiz,
       questions: quiz.questions.map(({ correctAnswer, ...rest }) => rest),
@@ -62,31 +80,34 @@ export class QuizService {
     return quizWithoutCorrectAnswers;
   }
 
-  // Method to submit an answer and provide feedback
+  @ApiOperation({ summary: 'Submit an answer for a quiz question' })
+  @ApiBody({ type: SubmitAnswerDto }) // Use the appropriate DTO here
+  @ApiResponse({
+    status: 200,
+    description: 'Answer submitted successfully.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Quiz or question not found.',
+  })
   submitAnswer(submitAnswerDto: SubmitAnswerDto) {
     const { quizId, questionId, answer } = submitAnswerDto;
 
-    // Check if the quiz exists
     const quiz = this.quizzes.find((q) => q.id === quizId);
     if (!quiz) {
       throw new NotFoundException('Quiz not found');
     }
 
-    // Find the specific question
     const question = quiz.questions.find((q) => q.id === questionId);
     if (!question) {
       throw new NotFoundException('Question not found');
     }
 
-    // Initialize the userAnswers for this quiz if not already initialized
     if (!this.userAnswers[quizId]) {
       this.userAnswers[quizId] = {};
     }
 
-    // Store the user's answer
     this.userAnswers[quizId][questionId] = answer;
-
-    // Check if the answer is correct or not
     const isCorrect = question.correctAnswer === answer;
     const feedback = isCorrect
       ? 'Correct!'
@@ -102,9 +123,23 @@ export class QuizService {
     };
   }
 
-  // Method to get the results for a specific quiz
+  @ApiOperation({ summary: 'Get results for a specific quiz' })
+  @ApiResponse({
+    status: 200,
+    description: 'The quiz results have been successfully retrieved.',
+    type: Object, // You can define a custom DTO here for the result response
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Quiz not found.',
+  })
   getResults(quizId: string) {
     const quiz = this.getQuizById(quizId);
+
+    if (!quiz) {
+      throw new NotFoundException('Quiz not found');
+    }
+
     const userQuizAnswers = this.userAnswers[quizId] || {};
     let score = 0;
 

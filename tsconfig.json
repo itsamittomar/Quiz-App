@@ -11,7 +11,7 @@
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "module": "CommonJS", // Change to CommonJS
+    "module": "CommonJS",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "strictPropertyInitialization": false,
@@ -19,6 +19,7 @@
     "incremental": true,
     "experimentalDecorators": true, // Enable decorators
     "emitDecoratorMetadata": true, // Enable metadata reflection for decorators
+    "types": ["jest"],
     "plugins": [
       {
         "name": "next"
@@ -41,3 +42,30 @@
     "node_modules"
   ]
 }
+
+
+
+// {
+//   "compilerOptions": {
+//     "target": "ES6",
+//     "module": "commonjs",
+//     "strict": true,
+//     "esModuleInterop": true,
+//     "skipLibCheck": true,
+//     "forceConsistentCasingInFileNames": true,
+//     "outDir": "./dist",
+//     "rootDir": "./src",
+//     "baseUrl": "./",
+//     "paths": {
+//       "@/*": ["src/*"]
+//     }
+//   },
+//   "include": [
+//     "src/**/*.ts"
+//   ],
+//   "exclude": [
+//     "node_modules"
+//   ]
+// }
+
+
