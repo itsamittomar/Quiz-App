@@ -1,36 +1,210 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Quiz App
 
-## Getting Started
+## Overview
 
-First, run the development server:
+Quiz App is a simple application that allows users to create quizzes, submit answers, and evaluate the results. The app provides an API that allows interaction with quizzes and their questions. This project is built using **NestJS** and **Swagger** for API documentation.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## API Documentation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The application provides the following APIs to interact with quizzes:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. **Create Quiz**
 
-## Learn More
+- **Endpoint**: `POST /quiz`
+- **Description**: Creates a new quiz with a title and questions.
+- **Request Body**: 
+    ```json
+    {
+      "title": "Sample Quiz Title",
+      "questions": [
+        {
+          "question": "What is 2 + 2?",
+          "options": ["3", "4", "5"],
+          "correctAnswer": "4"
+        },
+        {
+          "question": "What is the capital of France?",
+          "options": ["Berlin", "Madrid", "Paris"],
+          "correctAnswer": "Paris"
+        }
+      ]
+    }
+    ```
+- **Response**:
+    ```json
+    {
+      "statusCode": 201,
+      "message": "Quiz Created Successfully",
+      "data": {
+        "id": "quiz-uuid",
+        "title": "Sample Quiz Title",
+        "questions": [
+          {
+            "id": "question-uuid-1",
+            "question": "What is 2 + 2?",
+            "options": ["3", "4", "5"]
+          },
+          {
+            "id": "question-uuid-2",
+            "question": "What is the capital of France?",
+            "options": ["Berlin", "Madrid", "Paris"]
+          }
+        ]
+      }
+    }
+    ```
 
-To learn more about Next.js, take a look at the following resources:
+### 2. **Get Quiz Data**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Endpoint**: `GET /quiz/:quizId`
+- **Description**: Retrieves the quiz data by its ID.
+- **Response**:
+    ```json
+    {
+      "message": "Quiz data fetched Successfully",
+      "response": {
+        "id": "quiz-uuid",
+        "title": "Sample Quiz Title",
+        "questions": [
+          {
+            "id": "question-uuid-1",
+            "question": "What is 2 + 2?",
+            "options": ["3", "4", "5"]
+          },
+          {
+            "id": "question-uuid-2",
+            "question": "What is the capital of France?",
+            "options": ["Berlin", "Madrid", "Paris"]
+          }
+        ]
+      }
+    }
+    ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 3. **Submit Answer**
 
-## Deploy on Vercel
+- **Endpoint**: `POST /quiz/answer`
+- **Description**: Submits an answer for a specific question in a quiz.
+- **Request Body**:
+    ```json
+    {
+      "quizId": "quiz-uuid",
+      "questionId": "question-uuid-1",
+      "answer": "4"
+    }
+    ```
+- **Response**:
+    ```json
+    {
+      "feedback": "Correct!",
+      "isCorrect": true,
+      "quizId": "quiz-uuid",
+      "questionId": "question-uuid-1",
+      "userAnswer": "4",
+      "correctAnswer": "4"
+    }
+    ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 4. **Evaluate Quiz**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Endpoint**: `GET /quiz/:quizId/evaluate`
+- **Description**: Evaluates the results of a quiz.
+- **Response**:
+    ```json
+    {
+      "quizId": "quiz-uuid",
+      "score": 1,
+      "totalQuestions": 2,
+      "answerSummary": [
+        {
+          "questionId": "question-uuid-1",
+          "userAnswer": "4",
+          "correctAnswer": "4",
+          "isCorrect": true
+        },
+        {
+          "questionId": "question-uuid-2",
+          "userAnswer": "Madrid",
+          "correctAnswer": "Paris",
+          "isCorrect": false
+        }
+      ]
+    }
+    ```
+
+---
+
+## Models
+
+### Quiz
+
+A **Quiz** contains a title and a list of questions.
+
+- **id**: `string` (UUID)
+- **title**: `string`
+- **questions**: `Array<Question>`
+
+### Question
+
+A **Question** contains a question, a list of options, and the correct answer.
+
+- **id**: `string` (UUID)
+- **question**: `string`
+- **options**: `Array<string>`
+- **correctAnswer**: `string` (optional)
+
+### SubmitAnswerDto
+
+The **SubmitAnswerDto** is used to submit answers for a question.
+
+- **quizId**: `string` (UUID)
+- **questionId**: `string` (UUID)
+- **answer**: `string`
+
+### CreateQuizDto
+
+The **CreateQuizDto** is used to create a new quiz.
+
+- **title**: `string`
+- **questions**: `Array<QuestionDto>`
+
+### QuestionDto
+
+The **QuestionDto** is used to define questions when creating a quiz.
+
+- **question**: `string`
+- **options**: `Array<string>`
+- **correctAnswer**: `string` (optional)
+
+---
+
+## Installation
+
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/yourusername/quiz-app.git
+    ```
+
+2. Install dependencies:
+    ```bash
+    cd quiz-app
+    npm install
+    ```
+
+3. Start the application:
+    ```bash
+    npm run start:dev
+    ```
+
+4. To Check the test case:
+    ```bash
+    npm run test
+    ```
+
+4. The application will be running at `http://localhost:3001`. You can access the Swagger UI at `http://localhost:3001/api` to test the APIs.
+
+---
+
+
